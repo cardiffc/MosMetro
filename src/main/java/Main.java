@@ -10,7 +10,11 @@ public class Main {
                 Parser metroParser = new Parser(url);
                 ArrayList<Station> stations = metroParser.parseStations();
           //      stations.stream().filter(station -> station.getLine().equals("14")).forEach(l -> System.out.println(l.getName()));
-
+           //     stations.forEach(station -> System.out.println(station.getLine() + "/" + station.getName()));
+        //stations.forEach(station -> System.out.println(station.getLine() + "/" + station.getName()));
+     //   System.out.println(stations.size());
+      ArrayList<Line> lines = metroParser.parseLines();
+      lines.forEach(line -> System.out.println(line.getNumber() + "/" + line.getColor() + "/" + line.getName()));
 
     }
 }

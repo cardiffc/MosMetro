@@ -1,20 +1,18 @@
 import java.util.ArrayList;
 
 public class Line {
-    private int number;
+    private String number;
     private String name;
-    private ArrayList<Station> stations;
     private String color;
 
-    public Line(int number, String name, String color, ArrayList<Station> stations)
+    public Line(String number, String name, String color)
     {
         this.number = number;
         this.name = name;
         this.color = color;
-        this.stations = stations;
     }
 
-    public int getNumber() {
+    public String getNumber() {
         return number;
     }
 
@@ -22,16 +20,7 @@ public class Line {
         return name;
     }
 
-    public ArrayList<Station> getStations() {
-        return stations;
-    }
-
     public String getColor() {
         return color;
     }
-
-
-
-
-
 }
