@@ -6,12 +6,14 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import org.jsoup.select.NodeFilter;
 
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public class Parser {
     private String url;
@@ -26,10 +28,9 @@ public class Parser {
     {
         ArrayList<Station> stations = new ArrayList();
         Document mosMetroWeb = connectToUrl(url);
-        ArrayList<Element> tableSubway = mosMetroWeb.select("table").get(3).select("tr");
         for (int i = 3; i <= 5 ; i++) {
-            ArrayList<Element> tableMono = mosMetroWeb.select("table").get(i).select("tr");
-            tableMono.forEach(station -> {
+            ArrayList<Element> allSubway = mosMetroWeb.select("table").get(i).select("tr");
+            allSubway.forEach(station -> {
                 if (station.text().matches("^\\d{1}.+$") && !station.text().equals("14 Московское центральное кольцо")  ) {
                     String name = station.select("td").get(1).select("a").first().text();
                     String line = station.select("td").get(0).select("span").first().text();
@@ -41,48 +42,48 @@ public class Parser {
         }
         return stations;
     }
-    public ArrayList<Line> parseLines ()
+
+    public ArrayList<Line> parseLines (ArrayList<Station> stations)
     {
-        ArrayList<Line> parsedLines = new ArrayList<>();
         Document mosMetroWeb = connectToUrl(url);
+        ArrayList<Line> parsedLines = new ArrayList<>();
         ArrayList<Element> tableLines = mosMetroWeb.select("table").get(8).select("tr");
-        Pattern lineChecker = Pattern.compile("(?<number>.{2,4})\\s(?<name>.+)");
-        ArrayList<Element> lines = tableLines.get(1).select("td").select("dd");
-        Element kLine = tableLines.get(4).select("td").first();
-        lines.forEach(line ->{
-            Matcher checkAndTake = lineChecker.matcher(line.text());
-            if (checkAndTake.find()) {
-                String lineNumber = checkAndTake.group("number");
-                String lineName = checkAndTake.group("name");
-                String lineColor = "#FFFFFF";
-                ArrayList<Element> tableForColors = mosMetroWeb.select("table").get(3).select("tr");
-                for (int i = 0; i < tableForColors.size() ; i++) {
-                    System.out.println(tableForColors.get(i).text());
-                    if (tableForColors.get(i).text().matches("^\\d{1}.+")) {
-                        String lineNumber2 = tableForColors.get(i).select("td").get(0).select("span").first().text();
-                        String colorCode = tableForColors.get(i).select("td").get(0).attr("style").replaceAll(" ", "")
+
+        ArrayList<Element> lName = tableLines.get(1).select("td").select("a");
+        lName.add(tableLines.get(4).select("td").select("a").last());
+
+        ArrayList<Element> lNum = tableLines.get(1).select("td").select("span");
+        lNum.add(tableLines.get(4).selectFirst("td").select("span").first());
+
+        lName = (ArrayList<Element>) lName.stream().filter(name -> !name.text().equals("")).collect(Collectors.toList());
+        lNum = (ArrayList<Element>) lNum.stream().filter(num -> !num.text().equals("")).collect(Collectors.toList());
+
+        for (int i = 0; i < lName.size() ; i++) {
+            String lineName = lName.get(i).text();
+            String lineNumber = lNum.get(i).text();
+            String lineColor = "undefined";
+
+            //Подумать как убрать вот эту ебанистику!!!!
+            for (int j = 3; j <= 5 ; j++) {
+                ArrayList<Element> tableForColors = mosMetroWeb.select("table").get(j).select("tr");
+                for (int k = 0; k < tableForColors.size(); k++) {
+                    if (tableForColors.get(k).text().matches("^\\d{1}.+") && !tableForColors.get(k).text().equals("14 Московское центральное кольцо")) {
+                        String lineNumber2 = tableForColors.get(k).select("td").get(0).select("span").first().text();
+                        String colorCode = tableForColors.get(k).select("td").get(0).attr("style").replaceAll(" ", "")
                                 .replaceAll("background-color:", "");
-                        if (colorCode.matches("^(background:)(#.{6})(.+)?") && lineNumber.equals(lineNumber2)){
-                                lineColor = colorCode.substring(colorCode.indexOf(":") + 1, colorCode.indexOf(":") + 8);
-                        } else {
-                            MARKLOGGER.info(INVALID_STRING,"/parseLines/ Colors code is invalid and not parsed: {}",colorCode);
+                        if (colorCode.matches("^(background:)(#.{6})(.+)?") && lineNumber.equals(lineNumber2)) {
+                            lineColor = colorCode.substring(colorCode.indexOf(":") + 1, colorCode.indexOf(":") + 8);
                         }
                     }
                 }
-                parsedLines.add(new Line(lineNumber,lineName,lineColor));
-            } else {
-                MARKLOGGER.info(INVALID_STRING,"/parseStations/ String is invalid and not parsed: {}",line.text());
             }
-        });
-        Matcher kahovskaya = lineChecker.matcher(kLine.text());
-        if (kahovskaya.find()) {
-            String lineNumber = kahovskaya.group("number");
-            String lineName = kahovskaya.group("name");
-            String lineColor = "not defined";
-            parsedLines.add(new Line(lineNumber,lineName,lineColor));
+            ArrayList<Station> stationsOnLine = (ArrayList<Station>) stations.stream()
+                    .filter(station -> station.getLine().equals(lineNumber)).collect(Collectors.toList());
+            parsedLines.add(new Line(lineNumber,lineName,lineColor,stationsOnLine));
         }
         return parsedLines;
     }
+
     private Document connectToUrl(String url)
     {
         try {
