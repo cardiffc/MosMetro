@@ -27,27 +27,18 @@ public class Parser {
         ArrayList<Station> stations = new ArrayList();
         Document mosMetroWeb = connectToUrl(url);
         ArrayList<Element> tableSubway = mosMetroWeb.select("table").get(3).select("tr");
-
-        tableSubway.forEach(station -> {
-            if (station.text().matches("^\\d{1}.+")) {
-                String name = station.select("td").get(1).select("a").first().text();
-                String line = station.select("td").get(0).select("span").first().text();;
-                stations.add(new Station(name, line));
-            } else {
-                MARKLOGGER.info(INVALID_STRING,"/parseStations/ String is invalid and not parsed: {}",station.text());
-            }
-        });
-        ArrayList<Element> tableMck = mosMetroWeb.select("table").get(5).select("tr");
-        tableMck.forEach(station -> {
-            if (station.text().matches("^\\d{4}.+$")) {
-
-                String name = station.select("td").get(1).select("a").first().text();
-                String line = station.select("td").get(0).select("span").first().text();
-                stations.add(new Station(name, line));
-            } else {
-                MARKLOGGER.info(INVALID_STRING,"/parseStations/ String is invalid and not parsed: {}",station.text());
-            }
-        });
+        for (int i = 3; i <= 5 ; i++) {
+            ArrayList<Element> tableMono = mosMetroWeb.select("table").get(i).select("tr");
+            tableMono.forEach(station -> {
+                if (station.text().matches("^\\d{1}.+$") && !station.text().equals("14 Московское центральное кольцо")  ) {
+                    String name = station.select("td").get(1).select("a").first().text();
+                    String line = station.select("td").get(0).select("span").first().text();
+                    stations.add(new Station(name, line));
+                } else {
+                    MARKLOGGER.info(INVALID_STRING, "/parseStations/ String is invalid and not parsed: {}", station.text());
+                }
+            });
+        }
         return stations;
     }
     public ArrayList<Line> parseLines ()
@@ -66,6 +57,7 @@ public class Parser {
                 String lineColor = "#FFFFFF";
                 ArrayList<Element> tableForColors = mosMetroWeb.select("table").get(3).select("tr");
                 for (int i = 0; i < tableForColors.size() ; i++) {
+                    System.out.println(tableForColors.get(i).text());
                     if (tableForColors.get(i).text().matches("^\\d{1}.+")) {
                         String lineNumber2 = tableForColors.get(i).select("td").get(0).select("span").first().text();
                         String colorCode = tableForColors.get(i).select("td").get(0).attr("style").replaceAll(" ", "")
@@ -73,7 +65,7 @@ public class Parser {
                         if (colorCode.matches("^(background:)(#.{6})(.+)?") && lineNumber.equals(lineNumber2)){
                                 lineColor = colorCode.substring(colorCode.indexOf(":") + 1, colorCode.indexOf(":") + 8);
                         } else {
-                            MARKLOGGER.info(INVALID_STRING,"/parseStations/ Colors code is invalid and not parsed: {}",colorCode);
+                            MARKLOGGER.info(INVALID_STRING,"/parseLines/ Colors code is invalid and not parsed: {}",colorCode);
                         }
                     }
                 }
