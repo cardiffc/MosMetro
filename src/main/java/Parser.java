@@ -5,14 +5,8 @@ import org.apache.logging.log4j.MarkerManager;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
-import org.jsoup.select.NodeFilter;
-
-import java.lang.reflect.Array;
 import java.util.ArrayList;
-import java.util.TreeSet;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 public class Parser {
@@ -63,7 +57,7 @@ public class Parser {
             String lineNumber = lNum.get(i).text();
             String lineColor = "undefined";
 
-            //Подумать как убрать вот эту ебанистику!!!!
+            //Подумать как убрать вот эту ебанину!!!!
             for (int j = 3; j <= 5 ; j++) {
                 ArrayList<Element> tableForColors = mosMetroWeb.select("table").get(j).select("tr");
                 for (int k = 0; k < tableForColors.size(); k++) {
@@ -82,6 +76,47 @@ public class Parser {
             parsedLines.add(new Line(lineNumber,lineName,lineColor,stationsOnLine));
         }
         return parsedLines;
+    }
+
+    public ArrayList<Connection> parseConnections (String url, ArrayList<Station> stations)
+    {
+        Document mosMetroWeb = connectToUrl(url);
+        ArrayList<Element> tableForConnections = mosMetroWeb.select("table").get(3).select("tr");
+        ArrayList<Connection> connections = new ArrayList<>();
+        for (int i = 1; i <= tableForConnections.size() - 1; i++) {
+            Element columnWithConnection =  tableForConnections.get(i).select("td").get(3);
+            if (!columnWithConnection.text().isEmpty())
+            {
+                String lineFrom = tableForConnections.get(i).select("td").get(0).select("span").first().text();
+                String stationFrom = tableForConnections.get(i).select("td").get(1).select("a").first().text();
+                String conText = "";
+                String stationTo = "";
+                String lineTo = "";
+                ArrayList<Element> linesTo = columnWithConnection.select("span");
+                TreeMap<String, String> connection = new TreeMap<>();
+                connection.put(lineFrom,stationFrom);
+                for (int j = 0; j < linesTo.size() ; j += 2) {
+                    if (j % 2 == 0) {
+                        lineTo = linesTo.get(j).text();
+                        conText = linesTo.get(j + 1).select("a").attr("title");
+                        for (Station st : stations)
+                        {
+                            if (st.getLine().equals(lineTo))
+                            {
+                                if (conText.contains(st.getName())) {
+                                    stationTo = st.getName();
+                                }
+                            }
+                        }
+
+                    }
+                    connection.put(lineTo,stationTo);
+                }
+                connections.add(new Connection(connection));
+            }
+
+        }
+        return connections;
     }
 
     private Document connectToUrl(String url)
