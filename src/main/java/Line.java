@@ -1,6 +1,7 @@
 import java.util.ArrayList;
 
-public class Line {
+
+public class Line implements Comparable<Line> {
     private String number;
     private String name;
     private String color;
@@ -27,4 +28,24 @@ public class Line {
     }
 
     public ArrayList<Station> getStations() {return stations;}
+
+    @Override
+    public int compareTo(Line o) {
+        if (Double.parseDouble(o.getNumber().replaceAll("А",".5"))
+                > Double.parseDouble(this.getNumber().replaceAll("А",".5")))
+        {
+            return -1;
+        }
+        if (Double.parseDouble(o.getNumber().replaceAll("А",".5"))
+                < Double.parseDouble(this.getNumber().replaceAll("А",".5")))
+        {
+            return 1;
+        }
+        return 0;
+    }
+
+//    @Override
+//    public int compareTo(Object o) {
+//        return 0;
+//    }
 }

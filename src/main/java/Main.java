@@ -25,6 +25,7 @@ public class Main {
         ArrayList<Station> stations = metroParser.parseStations();
         ArrayList<Line> lines = metroParser.parseLines(stations);
         ArrayList<ConnectionMos> connections = metroParser.parseConnections(URL,stations);
+        Collections.sort(lines);
         subwayToJson(lines,connections);
     }
     private static void subwayToJson(ArrayList<Line> lines, ArrayList<ConnectionMos> connections)
@@ -79,6 +80,17 @@ public class Main {
             bw.close();
         } catch (Exception e) {
             e.printStackTrace();
+        }
+    }
+
+    private static void countFromJson ()
+    {
+        JSONParser parser = new JSONParser();
+        try {
+            Object object = parser.parse(new FileReader(OUTFILE));
+
+        } catch (Exception ex) {
+            ex.printStackTrace();
         }
     }
 
