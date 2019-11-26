@@ -1,10 +1,10 @@
 import java.util.TreeMap;
 
-public class Connection {
+public class ConnectionMos {
 
 
     private TreeMap<String, String> connection;
-    public Connection(TreeMap<String, String> connection) {
+    public ConnectionMos(TreeMap<String, String> connection) {
         this.connection = connection;
     }
 

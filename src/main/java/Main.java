@@ -1,7 +1,6 @@
 
 import java.util.ArrayList;
 import java.util.Map;
-import java.util.TreeSet;
 
 public class Main {
 
@@ -12,33 +11,15 @@ public class Main {
 
         Parser metroParser = new Parser(url);
         ArrayList<Station> stations = metroParser.parseStations();
-
-
-      //  stations.forEach(station -> System.out.println(station.getLine() + "/" + station.getName()));
-        //System.out.println(stations.size());
         ArrayList<Line> lines = metroParser.parseLines(stations);
+        ArrayList<ConnectionMos> connections = metroParser.parseConnections(url,stations);
+        connections.forEach(connection -> {
+            System.out.println("#####################################################");
+            for (Map.Entry<String, String> con : connection.getConnection().entrySet())
+            {
 
-        ArrayList<Connection> connections = metroParser.parseConnections(url,stations);
-
-        for (Map.Entry<String, String> con : connections.get(6).getConnection().entrySet())
-        {
-            System.out.println(con.getKey() + "/" + con.getValue());
-        }
-
-
-
-
-
-        //metroParser.parseConnections(url, stations);
-      //  lines.forEach(line -> System.out.println(line.getName()));
-
-//        lines.stream().filter(line -> line.getNumber().equals("011А")).forEach(line -> line.getStations().forEach(station -> System.out.println(station.getName())));
-
-      //  lines.forEach(line -> System.out.println(line.getName()));
-        //System.out.println(lines.size());
-        // stations.stream().filter(station -> station.getLine().equals("13")).forEach(station -> System.out.println(station.getName()));
-        // lines.stream().filter(line -> line.getNumber().equals("13")).forEach(line -> System.out.println(line.getName()));
-       // lines.forEach(line -> System.out.println(line.getNumber() + "/" + line.getColor() + "/" + line.getName()));
-
+                System.out.println(con.getKey() + "/" + con.getValue());
+            }
+        });
     }
 }

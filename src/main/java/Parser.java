@@ -2,10 +2,12 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.Marker;
 import org.apache.logging.log4j.MarkerManager;
+import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
 
@@ -78,11 +80,11 @@ public class Parser {
         return parsedLines;
     }
 
-    public ArrayList<Connection> parseConnections (String url, ArrayList<Station> stations)
+    public ArrayList<ConnectionMos> parseConnections (String url, ArrayList<Station> stations)
     {
         Document mosMetroWeb = connectToUrl(url);
         ArrayList<Element> tableForConnections = mosMetroWeb.select("table").get(3).select("tr");
-        ArrayList<Connection> connections = new ArrayList<>();
+        ArrayList<ConnectionMos> connections = new ArrayList<>();
         for (int i = 1; i <= tableForConnections.size() - 1; i++) {
             Element columnWithConnection =  tableForConnections.get(i).select("td").get(3);
             if (!columnWithConnection.text().isEmpty())
@@ -112,10 +114,11 @@ public class Parser {
                     }
                     connection.put(lineTo,stationTo);
                 }
-                connections.add(new Connection(connection));
+                connections.add(new ConnectionMos(connection));
             }
 
         }
+        connections = deleteDuplicateConnections(connections);
         return connections;
     }
 
@@ -128,6 +131,20 @@ public class Parser {
             MARKLOGGER.info(URL_ERROR,"URL Error {}", ex.getMessage());
         }
         return null;
+    }
+    private ArrayList<ConnectionMos> deleteDuplicateConnections (ArrayList<ConnectionMos> connections)
+    {
+        for (int i = 0; i < connections.size() ; i++) {
+            TreeMap<String, String> tempConnection = connections.get(i).getConnection();
+            for (int j = 0; j < connections.size() ; j++) {
+                TreeMap<String, String> toDelete = connections.get(j).getConnection();
+                if (i != j && tempConnection.equals(toDelete))
+                {
+                    connections.remove(i);
+                }
+            }
+        }
+        return connections;
     }
 }
 
