@@ -33,7 +33,7 @@ public class Main {
         JSONObject  mapOfSubway = new JSONObject();
         JSONObject stationsToMap = new JSONObject();
         JSONArray linesToMap = new JSONArray();
-       //Lines and stations to JSON
+        //Lines and stations to JSON
         lines.forEach(line -> {
             JSONObject lineToObj = new JSONObject();
             JSONArray newline = new JSONArray();
@@ -41,8 +41,8 @@ public class Main {
             stations.forEach(station -> newline.add(station.getName()));
             stationsToMap.put(line.getNumber(),newline);
             lineToObj.put("number", line.getNumber());
-            lineToObj.put("color", line.getColor());
             lineToObj.put("name", line.getName());
+            lineToObj.put("color", line.getColor());
             linesToMap.add(lineToObj);
         });
         // Connections to JSON
@@ -68,6 +68,7 @@ public class Main {
         mapOfSubway.put("connections", connectionsToMap);
 
         writeToJson(mapOfSubway);
+        countFromJson();
     }
     private static void writeToJson (JSONObject map)
     {
@@ -87,23 +88,15 @@ public class Main {
     {
         JSONParser parser = new JSONParser();
         try {
-            Object object = parser.parse(new FileReader(OUTFILE));
-
+            JSONObject subway = (JSONObject) parser.parse(new FileReader(OUTFILE));
+            JSONObject stations = (JSONObject) subway.get("stations");
+            for(Iterator iterator = stations.keySet().iterator(); iterator.hasNext();) {
+                String key = (String) iterator.next();
+                JSONArray jsonArray = (JSONArray) stations.get(key);
+                System.out.println("Line: " + key + " Number of Stations: " + jsonArray.size());
+            }
         } catch (Exception ex) {
             ex.printStackTrace();
         }
-    }
-
-    private static String getJsonFile()
-    {
-        StringBuilder builder = new StringBuilder();
-        try {
-            List<String> lines = Files.readAllLines(Paths.get(OUTFILE));
-            lines.forEach(line -> builder.append(line));
-        }
-        catch (Exception ex) {
-            ex.printStackTrace();
-        }
-        return builder.toString();
     }
 }
