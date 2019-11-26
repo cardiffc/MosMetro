@@ -8,6 +8,7 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
 
@@ -54,21 +55,32 @@ public class Parser {
         lName = (ArrayList<Element>) lName.stream().filter(name -> !name.text().equals("")).collect(Collectors.toList());
         lNum = (ArrayList<Element>) lNum.stream().filter(num -> !num.text().equals("")).collect(Collectors.toList());
 
+
+
+        Element table = mosMetroWeb.select("style").first();
+        String string = table.toString();
+        string = string.substring(string.indexOf("a:hover"));
+        ArrayList<String> colors = new ArrayList<>();
+
+        for (int i = 0; i < string.length() ; i++) {
+            if (string.charAt(i) == '#') {
+                colors.add(string.substring(i, i+7).toUpperCase());
+            }
+        }
         for (int i = 0; i < lName.size() ; i++) {
             String lineName = lName.get(i).text();
             String lineNumber = lNum.get(i).text();
             String lineColor = "undefined";
 
-            //Подумать как убрать вот эту ебанину!!!!
             for (int j = 3; j <= 5 ; j++) {
                 ArrayList<Element> tableForColors = mosMetroWeb.select("table").get(j).select("tr");
                 for (int k = 0; k < tableForColors.size(); k++) {
-                    if (tableForColors.get(k).text().matches("^\\d{1}.+") && !tableForColors.get(k).text().equals("14 Московское центральное кольцо")) {
+                    if (tableForColors.get(k).text().matches("^\\d{1}.+")  && !tableForColors.get(k).text().equals("14 Московское центральное кольцо")) {
                         String lineNumber2 = tableForColors.get(k).select("td").get(0).select("span").first().text();
-                        String colorCode = tableForColors.get(k).select("td").get(0).attr("style").replaceAll(" ", "")
-                                .replaceAll("background-color:", "");
-                        if (colorCode.matches("^(background:)(#.{6})(.+)?") && lineNumber.equals(lineNumber2)) {
-                            lineColor = colorCode.substring(colorCode.indexOf(":") + 1, colorCode.indexOf(":") + 8);
+                        String colorCode = tableForColors.get(k).select("td").get(0).attr("style");
+                        for (int l = 0; l < colors.size() ; l++) {
+                            lineColor = (colorCode.contains(colors.get(l)) && lineNumber.equals(lineNumber2))
+                                    ? colors.get(j) : lineColor;
                         }
                     }
                 }
@@ -91,7 +103,6 @@ public class Parser {
             {
                 String lineFrom = tableForConnections.get(i).select("td").get(0).select("span").first().text();
                 String stationFrom = tableForConnections.get(i).select("td").get(1).select("a").first().text();
-                String conText = "";
                 String stationTo = "";
                 String lineTo = "";
                 ArrayList<Element> linesTo = columnWithConnection.select("span");
@@ -100,23 +111,18 @@ public class Parser {
                 for (int j = 0; j < linesTo.size() ; j += 2) {
                     if (j % 2 == 0) {
                         lineTo = linesTo.get(j).text();
-                        conText = linesTo.get(j + 1).select("a").attr("title");
+                        String conText = linesTo.get(j + 1).select("a").attr("title");
                         for (Station st : stations)
                         {
-                            if (st.getLine().equals(lineTo))
-                            {
-                                if (conText.contains(st.getName())) {
-                                    stationTo = st.getName();
-                                }
+                            if (st.getLine().equals(lineTo)) {
+                                stationTo = (conText.contains(st.getName())) ? st.getName() : stationTo;
                             }
                         }
-
                     }
                     connection.put(lineTo,stationTo);
                 }
                 connections.add(new ConnectionMos(connection));
             }
-
         }
         connections = deleteDuplicateConnections(connections);
         return connections;
