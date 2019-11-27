@@ -5,7 +5,6 @@ import org.apache.logging.log4j.MarkerManager;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
-
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -14,11 +13,12 @@ public class Parser {
     private static final Logger MARKLOGGER = LogManager.getLogger(Parser.class);
     private static final Marker URL_ERROR = MarkerManager.getMarker("URL_ERROR");
     private static final Marker INVALID_STRING = MarkerManager.getMarker("INVALID_STRING");
+    private static final String STRINGTOESC = "14 Московское центральное кольцо";
     public Parser(String url) {
         this.url = url;
     }
 
-    public ArrayList<Line> parseStations()
+    public Object[] parseSubway()
     {
         Document mosMetroWeb = connectToUrl(url);
         ArrayList<Line> parsedLines = new ArrayList<>();
@@ -28,11 +28,10 @@ public class Parser {
             ArrayList<Element> allSubway = mosMetroWeb.select("table").get(i).select("tr");
             allSubway.forEach(station -> {
                 String lineColor = "undefined";
-                if (station.text().matches("^\\d{1}.+$") && !station.text().equals("14 Московское центральное кольцо")  ) {
+                if (station.text().matches("^\\d{1}.+$") && !station.text().equals(STRINGTOESC)  ) {
                     String stationName = station.select("td").get(1).select("a").first().text();
                     String lineNumber = station.select("td").get(0).select("span").first().text();
                     String lineName = station.select("td").get(0).select("span").get(1).attr("title");
-                    lineNumber = lineNumber.replace("А",".5");
                     lineName = lineName.replaceAll(" линия", "");
                     String colorCode = station.select("td").get(0).attr("style");
                     if (colorCode.matches("^(background:)(#.{6})(.+)?")) {
@@ -55,7 +54,8 @@ public class Parser {
                         });
             parsedLines.add(new Line(line.getKey().toString(),line.getValue().toString(),lineColor,stationsOnLine));
         }
-        return parsedLines;
+        Object[] parsedSubway = new Object[] {stations,parsedLines};
+        return parsedSubway;
     }
 
     public ArrayList<ConnectionMos> parseConnections (String url, ArrayList<Station> stations)
@@ -110,8 +110,7 @@ public class Parser {
             TreeMap<String, String> tempConnection = connections.get(i).getConnection();
             for (int j = 0; j < connections.size() ; j++) {
                 TreeMap<String, String> toDelete = connections.get(j).getConnection();
-                if (i != j && tempConnection.equals(toDelete))
-                {
+                if (i != j && tempConnection.equals(toDelete)) {
                     connections.remove(i);
                 }
             }

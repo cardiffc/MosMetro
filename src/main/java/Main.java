@@ -1,45 +1,33 @@
-
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.Marker;
+import org.apache.logging.log4j.MarkerManager;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
-
 import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.*;
 
 public class Main {
+    private static final Logger MARKLOGGER = LogManager.getLogger(Main.class);
+    private static final Marker INVALID_FILE = MarkerManager.getMarker("INVALID_FILE");
 
     private static final String URL = "https://ru.wikipedia.org/wiki/%D0%A1%D0%BF%D0%B8%D1%81%D0%BE%D0%BA_%D1%81%D1%82%D0%B0%D0%BD%D1%86%D0" +
             "%B8%D0%B9_%D0%9C%D0%BE%D1%81%D0%BA%D0%BE%D0%B2%D1%81%D0%BA%D0%BE%D0%B3%D0%BE_%D0%BC%D0%B5%D1%82%D1%" +
             "80%D0%BE%D0%BF%D0%BE%D0%BB%D0%B8%D1%82%D0%B5%D0%BD%D0%B0";
 
-    private static final String OUTFILE = "src/main/resources/mosmetromap.json";
+    private static final String OUTFILE = "src/main/resources/1/mosmetromap.json";
 
     public static void main(String[] args) throws ParseException {
 
         Parser metroParser = new Parser(URL);
-        ArrayList<Line> lines = metroParser.parseStations();
-//        lines.stream().forEach(line -> {
-//            System.out.println(line.getNumber().replace(".5","A") + "/" + line.getName() + "/" + line.getColor().toString());
-//            //line.getStations().stream().forEach(station -> System.out.println(station.getName() + "/" + station.getLineColor()));
-//        });
-        ArrayList<Station> stations = new ArrayList<>();
-        for (Line line : lines) {
-            ArrayList<Station> stationsOnLine = line.getStations();
-            for (Station station : stationsOnLine)
-            {
-                stations.add(station);
-            }
-
-        }
-        //  System.out.println(stations.size());
-        //     ArrayList<Line> lines = metroParser.parseLines(stations);
-       ArrayList<ConnectionMos> connections = metroParser.parseConnections(URL,stations);
-     //   Collections.sort(lines);
+        Object[] subway = metroParser.parseSubway();
+        ArrayList<Line> lines = (ArrayList<Line>) subway[1];
+        ArrayList<Station> stations = (ArrayList<Station>) subway[0];
+        ArrayList<ConnectionMos> connections = metroParser.parseConnections(URL,stations);
         subwayToJson(lines,connections);
         countFromJson();
     }
@@ -57,16 +45,15 @@ public class Main {
             stationsToMap.put(line.getNumber(),newline);
             lineToObj.put("number", line.getNumber());
             lineToObj.put("name", line.getName());
-            lineToObj.put("color", line.getColor());
+            lineToObj.put("color", line.getColor().toString());
             linesToMap.add(lineToObj);
         });
         // Connections to JSON
         JSONArray connectionsToMap = new JSONArray();
-        JSONArray newConnection = new JSONArray();
         JSONArray currentConnection = new JSONArray();
         connections.forEach(connection -> {
-            newConnection.clear();
-            for (Map.Entry<String, String> con : connection.getConnection().entrySet())
+            JSONArray newConnection = new JSONArray();
+            for (Map.Entry con : connection.getConnection().entrySet())
             {
                 JSONObject thisConnection = new JSONObject();
                 thisConnection.put("line",con.getKey());
@@ -81,9 +68,7 @@ public class Main {
         mapOfSubway.put("stations",stationsToMap);
         mapOfSubway.put("lines", linesToMap);
         mapOfSubway.put("connections", connectionsToMap);
-
         writeToJson(mapOfSubway);
-
     }
     private static void writeToJson (JSONObject map)
     {
@@ -95,7 +80,7 @@ public class Main {
             bw.append(jsonOutput);
             bw.close();
         } catch (Exception e) {
-            e.printStackTrace();
+             MARKLOGGER.info(INVALID_FILE,"/writeToJson/ Path is invalid or FS error: {}",e.getMessage());
         }
     }
 
@@ -110,8 +95,8 @@ public class Main {
                 JSONArray jsonArray = (JSONArray) stations.get(key);
                 System.out.println("Line: " + key + " Number of Stations: " + jsonArray.size());
             }
-        } catch (Exception ex) {
-            ex.printStackTrace();
+        } catch (Exception e) {
+            MARKLOGGER.info(INVALID_FILE, "/countFromJson/ File invalid/does not exist or FS error: {}", e.getMessage());
         }
     }
 }

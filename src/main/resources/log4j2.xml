@@ -13,12 +13,19 @@
                 <MarkerFilter marker="INVALID_STRING" />
             </Filters>
         </File>
+        <File name="InvalidFile" fileName="logs/file_errors.log">
+            <PatternLayout pattern="%d{yyy-MM-dd HH:mm:ss.SSS} %msg%n"/>
+            <Filters>
+                <MarkerFilter marker="INVALID_FILE" />
+            </Filters>
+        </File>
     </Appenders>
 
     <Loggers>
         <root level="info">
             <appender-ref ref="URLError" />
             <appender-ref ref="InvalidString" />
+            <appender-ref ref="InvalidFile" />
         </root>
     </Loggers>
 </Configuration>
