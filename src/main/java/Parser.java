@@ -2,15 +2,12 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.Marker;
 import org.apache.logging.log4j.MarkerManager;
-import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.Iterator;
-import java.util.TreeMap;
-import java.util.stream.Collectors;
+
+import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class Parser {
     private String url;
@@ -21,73 +18,42 @@ public class Parser {
         this.url = url;
     }
 
-    public ArrayList<Station> parseStations()
+    public ArrayList<Line> parseStations()
     {
-        ArrayList<Station> stations = new ArrayList();
         Document mosMetroWeb = connectToUrl(url);
+        ArrayList<Line> parsedLines = new ArrayList<>();
+        TreeMap<String,String> lines = new TreeMap<>();
+        ArrayList<Station> stations = new ArrayList();
         for (int i = 3; i <= 5 ; i++) {
             ArrayList<Element> allSubway = mosMetroWeb.select("table").get(i).select("tr");
             allSubway.forEach(station -> {
+                String lineColor = "undefined";
                 if (station.text().matches("^\\d{1}.+$") && !station.text().equals("14 Московское центральное кольцо")  ) {
-                    String name = station.select("td").get(1).select("a").first().text();
-                    String line = station.select("td").get(0).select("span").first().text();
-                    stations.add(new Station(name, line));
+                    String stationName = station.select("td").get(1).select("a").first().text();
+                    String lineNumber = station.select("td").get(0).select("span").first().text();
+                    String lineName = station.select("td").get(0).select("span").get(1).attr("title");
+                    lineNumber = lineNumber.replace("А",".5");
+                    lineName = lineName.replaceAll(" линия", "");
+                    String colorCode = station.select("td").get(0).attr("style");
+                    if (colorCode.matches("^(background:)(#.{6})(.+)?")) {
+                        lineColor = colorCode.substring(colorCode.indexOf(":") + 1, colorCode.indexOf(":") + 8);
+                    }
+                    lines.put(lineNumber,lineName);
+                    stations.add(new Station(stationName, lineNumber, lineColor));
                 } else {
                     MARKLOGGER.info(INVALID_STRING, "/parseStations/ String is invalid and not parsed: {}", station.text());
                 }
             });
         }
-        return stations;
-    }
-
-    public ArrayList<Line> parseLines (ArrayList<Station> stations)
-    {
-        Document mosMetroWeb = connectToUrl(url);
-        ArrayList<Line> parsedLines = new ArrayList<>();
-        ArrayList<Element> tableLines = mosMetroWeb.select("table").get(8).select("tr");
-
-        ArrayList<Element> lName = tableLines.get(1).select("td").select("a");
-        lName.add(tableLines.get(4).select("td").select("a").last());
-
-        ArrayList<Element> lNum = tableLines.get(1).select("td").select("span");
-        lNum.add(tableLines.get(4).selectFirst("td").select("span").first());
-
-        lName = (ArrayList<Element>) lName.stream().filter(name -> !name.text().equals("")).collect(Collectors.toList());
-        lNum = (ArrayList<Element>) lNum.stream().filter(num -> !num.text().equals("")).collect(Collectors.toList());
-
-
-
-        Element table = mosMetroWeb.select("style").first();
-        String string = table.toString();
-        string = string.substring(string.indexOf("a:hover"));
-        ArrayList<String> colors = new ArrayList<>();
-
-        for (int i = 0; i < string.length() ; i++) {
-            if (string.charAt(i) == '#') {
-                colors.add(string.substring(i, i+7).toUpperCase());
-            }
-        }
-        for (int i = 0; i < lName.size() ; i++) {
-            String lineName = lName.get(i).text();
-            String lineNumber = lNum.get(i).text();
-            String lineColor = "undefined";
-
-            for (int j = 3; j <= 5 ; j++) {
-                ArrayList<Element> tableForColors = mosMetroWeb.select("table").get(j).select("tr");
-                for (int k = 0; k < tableForColors.size(); k++) {
-                    if (tableForColors.get(k).text().matches("^\\d{1}.+")  && !tableForColors.get(k).text().equals("14 Московское центральное кольцо")) {
-                        String lineNumber2 = tableForColors.get(k).select("td").get(0).select("span").first().text();
-                        String colorCode = tableForColors.get(k).select("td").get(0).attr("style");
-                        for (int l = 0; l < colors.size() ; l++) {
-                            lineColor = (colorCode.contains(colors.get(l)) && lineNumber.equals(lineNumber2))
-                                    ? colors.get(j) : lineColor;
-                        }
-                    }
-                }
-            }
-            ArrayList<Station> stationsOnLine = (ArrayList<Station>) stations.stream()
-                    .filter(station -> station.getLine().equals(lineNumber)).collect(Collectors.toList());
-            parsedLines.add(new Line(lineNumber,lineName,lineColor,stationsOnLine));
+        for (Map.Entry line : lines.entrySet()) {
+            ArrayList<Station> stationsOnLine = new ArrayList<>();
+            AtomicReference<String> lineColor = new AtomicReference<>("");
+            stations.stream().filter(station -> station.getLine().equals(line.getKey()))
+                    .forEach(stationOnLine -> {
+                        stationsOnLine.add(stationOnLine);
+                        lineColor.set(stationOnLine.getLineColor());
+                        });
+            parsedLines.add(new Line(line.getKey().toString(),line.getValue().toString(),lineColor,stationsOnLine));
         }
         return parsedLines;
     }

@@ -1,12 +1,12 @@
 public class Station {
     private String name;
     private String line;
-   // private String lineColor;
+    private String lineColor;
 
-    public Station(String name, String line) {
+    public Station(String name, String line, String lineColor) {
         this.name = name;
         this.line = line;
-       // this.lineColor = color;
+        this.lineColor = lineColor;
     }
 
     public String getName() {
@@ -17,6 +17,6 @@ public class Station {
         return line;
     }
 
-   // public String getLineColor() {return lineColor;}
+    public String getLineColor() {return lineColor;}
 
 }

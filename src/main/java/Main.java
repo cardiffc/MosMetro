@@ -22,12 +22,26 @@ public class Main {
     public static void main(String[] args) throws ParseException {
 
         Parser metroParser = new Parser(URL);
-        ArrayList<Station> stations = metroParser.parseStations();
-        ArrayList<Line> lines = metroParser.parseLines(stations);
-        ArrayList<ConnectionMos> connections = metroParser.parseConnections(URL,stations);
-        Collections.sort(lines);
+        ArrayList<Line> lines = metroParser.parseStations();
+//        lines.stream().forEach(line -> {
+//            System.out.println(line.getNumber().replace(".5","A") + "/" + line.getName() + "/" + line.getColor().toString());
+//            //line.getStations().stream().forEach(station -> System.out.println(station.getName() + "/" + station.getLineColor()));
+//        });
+        ArrayList<Station> stations = new ArrayList<>();
+        for (Line line : lines) {
+            ArrayList<Station> stationsOnLine = line.getStations();
+            for (Station station : stationsOnLine)
+            {
+                stations.add(station);
+            }
+
+        }
+        //  System.out.println(stations.size());
+        //     ArrayList<Line> lines = metroParser.parseLines(stations);
+       ArrayList<ConnectionMos> connections = metroParser.parseConnections(URL,stations);
+     //   Collections.sort(lines);
         subwayToJson(lines,connections);
-      //  countFromJson();
+        countFromJson();
     }
     private static void subwayToJson(ArrayList<Line> lines, ArrayList<ConnectionMos> connections)
     {

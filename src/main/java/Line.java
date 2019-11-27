@@ -1,13 +1,14 @@
 import java.util.ArrayList;
+import java.util.concurrent.atomic.AtomicReference;
 
 
 public class Line implements Comparable<Line> {
     private String number;
     private String name;
-    private String color;
+    AtomicReference<String> color;
     private ArrayList<Station> stations;
 
-    public Line(String number, String name, String color,ArrayList<Station> stations)
+    public Line(String number, String name, AtomicReference<String> color, ArrayList<Station> stations)
     {
         this.number = number;
         this.name = name;
@@ -23,11 +24,15 @@ public class Line implements Comparable<Line> {
         return name;
     }
 
-    public String getColor() {
+    public AtomicReference<String> getColor() {
         return color;
     }
 
     public ArrayList<Station> getStations() {return stations;}
+
+//    public void setColor(String color) {
+//        this.color = color;
+//    }
 
     @Override
     public int compareTo(Line o) {
