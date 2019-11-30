@@ -1,6 +1,6 @@
 import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicReference;
-public class Line {
+public class Line implements Comparable<Line> {
     private String number;
     private String name;
     private AtomicReference<String> color;
@@ -22,4 +22,19 @@ public class Line {
         return color;
     }
     public ArrayList<Station> getStations() {return stations;}
+
+    @Override
+    public int compareTo(Line o) {
+        Double curNumber = Double.parseDouble(this.number.replace("А",".5"));
+        Double newNumber = Double.parseDouble(o.getNumber().replace("А",".5"));
+        if (curNumber > newNumber)
+        {
+            return 1;
+        }
+        if (curNumber < newNumber)
+        {
+            return -1;
+        }
+        return 0;
+    }
 }

@@ -28,6 +28,8 @@ public class Main {
         ArrayList<Line> lines = (ArrayList<Line>) subway[1];
         ArrayList<Station> stations = (ArrayList<Station>) subway[0];
         ArrayList<ConnectionMos> connections = metroParser.parseConnections(URL,stations);
+        Collections.sort(lines);
+        Collections.sort(stations);
         subwayToJson(lines,connections);
         countFromJson();
     }
@@ -65,6 +67,7 @@ public class Main {
         connectionsToMap.add(currentConnection);
 
         //Add Everything to global JSON object
+
         mapOfSubway.put("stations",stationsToMap);
         mapOfSubway.put("lines", linesToMap);
         mapOfSubway.put("connections", connectionsToMap);

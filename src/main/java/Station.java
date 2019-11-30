@@ -1,4 +1,4 @@
-public class Station {
+public class Station implements Comparable<Station> {
     private String name;
     private String line;
     private String lineColor;
@@ -19,4 +19,19 @@ public class Station {
 
     public String getLineColor() {return lineColor;}
 
+    @Override
+    public int compareTo(Station o) {
+        Double curNumber = Double.parseDouble(line.replace("А",".5"));
+        Double newNumber = Double.parseDouble(o.getLine().replace("А",".5"));
+        if (curNumber > newNumber)
+        {
+            return 1;
+        }
+        if (curNumber < newNumber)
+        {
+            return -1;
+        }
+        return 0;
+
+    }
 }
