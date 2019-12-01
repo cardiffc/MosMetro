@@ -27,7 +27,6 @@ public class Line implements Comparable<Line> {
     public int compareTo(Line o) {
         Double curNumber = Double.parseDouble(this.number.replace("А",".5"));
         Double newNumber = Double.parseDouble(o.getNumber().replace("А",".5"));
-        System.out.println(curNumber.compareTo(newNumber));
         return curNumber.compareTo(newNumber);
     }
 }
