@@ -1,25 +1,16 @@
+package Jsons;
 
 import Jsons.LineForJson;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
-
-public class Metro {
-
-    private Map<Double, List<String>> stations = new TreeMap<>();
+public class MetroFromJson {
+    private Map<String, List<String>> stations = new TreeMap<>();
     private List<LineForJson> lines = new ArrayList<>();
     private Object[] connections;
-    private ArrayList<String> test;
-
-    public void setTest(ArrayList<String> test) {
-        this.test = test;
-    }
-
-    public ArrayList<String> getTest() {
-        return test;
-    }
-
-
 
 
     public void setConnections(Object[] connections) {
@@ -32,11 +23,11 @@ public class Metro {
 
 
 
-    public Map<Double, List<String>> getStations() {
+    public Map<String, List<String>> getStations() {
         return stations;
     }
 
-    public void setStations(Map<Double, List<String>> stations) {
+    public void setStations(Map<String, List<String>> stations) {
         this.stations = stations;
     }
 

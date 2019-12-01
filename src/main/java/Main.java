@@ -1,16 +1,14 @@
+import Jsons.LineForJson;
+import Jsons.MetroFromJson;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.Marker;
 import org.apache.logging.log4j.MarkerManager;
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
 
+import javax.swing.text.html.parser.Entity;
 import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.*;
 
 public class Main {
@@ -23,86 +21,101 @@ public class Main {
 
     private static final String OUTFILE = "src/main/resources/mosmetromap.json";
 
-    public static void main(String[] args)  {
+    public static void main(String[] args) {
 
         Parser metroParser = new Parser(URL);
         Object[] subway = metroParser.parseSubway();
         ArrayList<Line> lines = (ArrayList<Line>) subway[1];
         ArrayList<Station> stations = (ArrayList<Station>) subway[0];
-        ArrayList<ConnectionMos> connections = metroParser.parseConnections(URL,stations);
+        ArrayList<ConnectionMos> connections = metroParser.parseConnections(URL, stations);
         Collections.sort(lines);
         Collections.sort(stations);
-      //  connections.forEach(connectionMos -> System.out.println(connectionMos.getConnection()));
-        subwayToJson(lines,connections);
+        subwayToJson(lines, connections);
         countFromJson();
     }
-    private static void subwayToJson(ArrayList<Line> lines, ArrayList<ConnectionMos> connections)
-    {
-        Map<String, List<String>> linesStToJson = new TreeMap<>();
+    private static void subwayToJson(ArrayList<Line> lines, ArrayList<ConnectionMos> connections) {
+        Map<Double, List<String>> linesStToJson = new TreeMap<>();
         ArrayList<LineForJson> linesForJson = new ArrayList<>();
         lines.forEach(line -> {
             ArrayList<Station> stations = line.getStations();
             ArrayList<String> stationNames = new ArrayList<>();
             stations.forEach(station -> stationNames.add(station.getName()));
-            linesStToJson.put(line.getNumber(), stationNames);
-            linesForJson.add(new LineForJson(line.getName(),line.getNumber(),line.getColor().toString()));
+            linesStToJson.put(Double.parseDouble(line.getNumber().replace("А", ".5")), stationNames);
+            linesForJson.add(new LineForJson(line.getName(), line.getNumber(), line.getColor().toString()));
         });
 
+        ArrayList<String> test = new ArrayList<>();
+        test.add("tttt");
+        test.add("5555");
 
         Metro jsonMap = new Metro();
         jsonMap.setStations(linesStToJson);
         jsonMap.setLines(linesForJson);
 
+
+        jsonMap.setTest(test);
+
+       // Object[] connectionsForJson = new Object[];
+//        Object[] temp = new Object[1];
+//        connections.forEach(connection -> {
+//            //Object[] temp = new Object[] {connection};
+//            temp[0] = connection;
+//
+//            jsonMap.setConnections(temp);
+////
+//            TreeMap<String, String> connection1 = connection.getConnection();
+//
+//
+//            System.out.println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
+//            for (Map.Entry con : connection1.entrySet()) {
+//
+//
+//                String
+//                System.out.println(con.getKey() + "/" + con.getValue());
+//            }
+
+   //     });
+
+       // int[][] test = {{1,2},{3,4}};
+
+//        Metro jsonMap = new Metro();
+//        jsonMap.setStations(linesStToJson);
+//        jsonMap.setLines(linesForJson);
+//        jsonMap.setTest(test);
         String jsonFile =
                 new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().
                         create().toJson(jsonMap);
-        writeToJson(jsonFile);
+        writeToJson(jsonFile.replace(".5", "A").replace(".0", ""));
 
     }
-    private static void writeToJson (String map)
-    {
+
+    private static void writeToJson(String map) {
         try {
             BufferedWriter writer = new BufferedWriter(new FileWriter(OUTFILE, false));
             writer.append(map);
             writer.close();
         } catch (Exception e) {
-             MARKLOGGER.info(INVALID_FILE,"/writeToJson/ Path is invalid or FS error: {}",e.getMessage());
+            MARKLOGGER.info(INVALID_FILE, "/writeToJson/ Path is invalid or FS error: {}", e.getMessage());
         }
     }
 
-    private static void countFromJson () {
-//    {
-//       try {
-//           Gson mosmetro = new Gson();
-//
-//           String test = mosmetro.fromJson(new FileReader(OUTFILE), String.class);
-//           System.out.println(test);
-//
-//           //Object object = Gson.fromJson(new FileReader("C:\\fileName.json"), Object.class);
-//          // String met = (Path.of(OUTFILE));
-////           Metro mos = mosmetro.fromJson(new FileReader(OUTFILE), Metro.class);
-////           Map<Double, List<String>> lines = mos.getStations();
-////           for (Map.Entry st : lines.entrySet()) {
-////               System.out.println(st.getKey() + "/" + st.getValue());
-////
-////           }
-//
-//       } catch (Exception ex) {
-//           ex.printStackTrace();
-//       }
+    private static void countFromJson() {
+        {
+            try {
+                Gson mosmetro = new Gson();
+                MetroFromJson mos = mosmetro.fromJson(new FileReader(OUTFILE), MetroFromJson.class);
+                Map<String, List<String>> lines = mos.getStations();
+                for (Map.Entry st : lines.entrySet()) {
+                   String number = st.getKey().toString();
+                   number = (number.length() == 1 || number.equals("11A")) ? 0 + number : number;
+                   String[] stations = st.getValue().toString().split(",");
+                   System.out.println("Line number: " + number + " Stations: " + stations.length);
+                }
 
-//        JSONParser parser = new JSONParser();
-//        try {
-//            JSONObject subway = (JSONObject) parser.parse(new FileReader(OUTFILE));
-//            JSONObject stations = (JSONObject) subway.get("stations");
-//            for(Iterator iterator = stations.keySet().iterator(); iterator.hasNext();) {
-//                String key = (String) iterator.next();
-//                JSONArray jsonArray = (JSONArray) stations.get(key);
-//                System.out.println("Line: " + key + " Number of Stations: " + jsonArray.size());
-//            }
-//        } catch (Exception e) {
-//            MARKLOGGER.info(INVALID_FILE, "/countFromJson/ File invalid/does not exist or FS error: {}", e.getMessage());
-//        }
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        }
+
     }
-
 }
