@@ -6,8 +6,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.Marker;
 import org.apache.logging.log4j.MarkerManager;
-
-import javax.swing.text.html.parser.Entity;
 import java.io.*;
 import java.util.*;
 
@@ -34,6 +32,8 @@ public class Main {
         countFromJson();
     }
     private static void subwayToJson(ArrayList<Line> lines, ArrayList<ConnectionMos> connections) {
+
+        // Тут бы добавляем в JSON станции и линии
         Map<Double, List<String>> linesStToJson = new TreeMap<>();
         ArrayList<LineForJson> linesForJson = new ArrayList<>();
         lines.forEach(line -> {
@@ -44,44 +44,28 @@ public class Main {
             linesForJson.add(new LineForJson(line.getName(), line.getNumber(), line.getColor().toString()));
         });
 
-        ArrayList<String> test = new ArrayList<>();
-        test.add("tttt");
-        test.add("5555");
+        // А вот тут, таким вот хитро...вывернутым способом connections. Ибо в самом JSON должен быть массив массивов объектов
+        ArrayList<ArrayList<TreeMap<String,String>>> connectionsToJson = new ArrayList<>();
+        for (int i = 0; i < connections.size() ; i++) {
+            ArrayList<TreeMap<String,String>> thisConnection = new ArrayList<>();
+            TreeMap<String,String> newConnection = connections.get(i).getConnection();
+            for (Map.Entry connection : newConnection.entrySet())
+            {
+                TreeMap<String,String> station = new TreeMap<>();
+                station.put("line",connection.getKey().toString());
+                station.put("station",connection.getValue().toString());
+                thisConnection.add(station);
+            }
+            connectionsToJson.add(thisConnection);
+        }
 
+        // Создаем новый объект класса метро и инициализируем его переменные.
         Metro jsonMap = new Metro();
         jsonMap.setStations(linesStToJson);
         jsonMap.setLines(linesForJson);
+        jsonMap.setConnections(connectionsToJson);
 
-
-        jsonMap.setTest(test);
-
-       // Object[] connectionsForJson = new Object[];
-//        Object[] temp = new Object[1];
-//        connections.forEach(connection -> {
-//            //Object[] temp = new Object[] {connection};
-//            temp[0] = connection;
-//
-//            jsonMap.setConnections(temp);
-////
-//            TreeMap<String, String> connection1 = connection.getConnection();
-//
-//
-//            System.out.println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
-//            for (Map.Entry con : connection1.entrySet()) {
-//
-//
-//                String
-//                System.out.println(con.getKey() + "/" + con.getValue());
-//            }
-
-   //     });
-
-       // int[][] test = {{1,2},{3,4}};
-
-//        Metro jsonMap = new Metro();
-//        jsonMap.setStations(linesStToJson);
-//        jsonMap.setLines(linesForJson);
-//        jsonMap.setTest(test);
+        //Формируем JSON и передаем специальному методу на вывод.
         String jsonFile =
                 new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().
                         create().toJson(jsonMap);
@@ -113,7 +97,7 @@ public class Main {
                 }
 
             } catch (Exception ex) {
-                ex.printStackTrace();
+                MARKLOGGER.info(INVALID_FILE, "/countFromJson/ Path is invalid or FS error: {}", ex.getMessage());
             }
         }
 

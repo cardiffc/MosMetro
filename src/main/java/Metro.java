@@ -8,29 +8,15 @@ public class Metro {
 
     private Map<Double, List<String>> stations = new TreeMap<>();
     private List<LineForJson> lines = new ArrayList<>();
-    private Object[] connections;
-    private ArrayList<String> test;
+    private ArrayList<ArrayList<TreeMap<String,String>>> connections;
 
-    public void setTest(ArrayList<String> test) {
-        this.test = test;
-    }
-
-    public ArrayList<String> getTest() {
-        return test;
-    }
-
-
-
-
-    public void setConnections(Object[] connections) {
+    public void setConnections(ArrayList<ArrayList<TreeMap<String,String>>> connections) {
         this.connections = connections;
     }
 
-    public Object[] getConnections() {
+    public ArrayList<ArrayList<TreeMap<String,String>>> getConnections() {
         return connections;
     }
-
-
 
     public Map<Double, List<String>> getStations() {
         return stations;

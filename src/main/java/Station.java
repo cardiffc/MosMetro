@@ -23,15 +23,6 @@ public class Station implements Comparable<Station> {
     public int compareTo(Station o) {
         Double curNumber = Double.parseDouble(line.replace("А",".5"));
         Double newNumber = Double.parseDouble(o.getLine().replace("А",".5"));
-        if (curNumber > newNumber)
-        {
-            return 1;
-        }
-        if (curNumber < newNumber)
-        {
-            return -1;
-        }
-        return 0;
-
+        return curNumber.compareTo(newNumber);
     }
 }
